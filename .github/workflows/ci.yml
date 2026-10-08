@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # The scripts under test rely on macOS tools (BSD stat and date).
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint shell scripts
+        run: |
+          brew install shellcheck
+          shellcheck plugins/doorbell/scripts/*.sh tests/run.sh
+
+      - name: Check that manifests are valid JSON
+        run: |
+          jq -e . .claude-plugin/marketplace.json >/dev/null
+          jq -e . plugins/doorbell/.claude-plugin/plugin.json >/dev/null
+          jq -e . plugins/doorbell/hooks/hooks.json >/dev/null
+
+      - name: Run tests
+        run: bash tests/run.sh
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Markdown
+        run: npx --yes markdownlint-cli2@0.23.3 "**/*.md"

@@ -1,0 +1,37 @@
+name: Bug report
+description: Doorbell did not ring, rang when it should not have, or a click went to the wrong place
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: What was Claude doing, which window were you looking at, and what did Doorbell do?
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of /doorbell:doctor
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log lines from that time
+      description: >-
+        From ~/.claude/plugins/data/doorbell-slavic-sensei/doorbell.log.
+        If the file does not exist, write "no log".
+        The log holds no message text and no commands; project names can be replaced.
+      render: text
+    validations:
+      required: false
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: macOS and chip (Apple Silicon or Intel), VS Code, the Claude Code extension, terminal-notifier, Doorbell
+      placeholder: macOS 27.0 on Apple Silicon, VS Code 1.140, Claude Code 2.1.292, terminal-notifier 3.1.0, Doorbell 0.1.0
+    validations:
+      required: true

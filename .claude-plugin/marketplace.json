@@ -1,0 +1,15 @@
+{
+  "name": "slavic-sensei",
+  "description": "Small tools for working with Claude Code in VS Code.",
+  "owner": {
+    "name": "Slavic-Sensei",
+    "url": "https://github.com/Slavic-Sensei"
+  },
+  "plugins": [
+    {
+      "name": "doorbell",
+      "source": "./plugins/doorbell",
+      "description": "Sound and a clickable macOS banner when a Claude Code session in VS Code needs you or has finished. The click lands in the right window and the right chat."
+    }
+  ]
+}

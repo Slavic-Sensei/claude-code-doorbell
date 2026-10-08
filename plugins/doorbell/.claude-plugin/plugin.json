@@ -1,0 +1,65 @@
+{
+  "name": "doorbell",
+  "displayName": "Doorbell",
+  "version": "0.1.0",
+  "description": "Sound and a clickable macOS banner when a Claude Code session in VS Code needs you or has finished. The click lands in the right window and the right chat.",
+  "author": {
+    "name": "Slavic-Sensei",
+    "url": "https://github.com/Slavic-Sensei"
+  },
+  "homepage": "https://github.com/Slavic-Sensei/claude-code-doorbell",
+  "repository": "https://github.com/Slavic-Sensei/claude-code-doorbell",
+  "license": "MIT",
+  "keywords": ["notifications", "hooks", "vscode", "macos", "sound"],
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Language",
+      "description": "Language of the banner text: en or cs.",
+      "default": "en"
+    },
+    "min_done_seconds": {
+      "type": "number",
+      "title": "Shortest turn worth announcing (seconds)",
+      "description": "A turn that finishes faster than this ends while you are still watching it, so it stays silent. 0 announces every turn.",
+      "default": 10,
+      "min": 0
+    },
+    "sound_attention": {
+      "type": "string",
+      "title": "Sound: needs you",
+      "description": "Played when a session waits for your approval or answer. A name from /System/Library/Sounds, without the extension.",
+      "default": "Funk"
+    },
+    "sound_done": {
+      "type": "string",
+      "title": "Sound: finished",
+      "description": "Played when a session has finished its turn. A name from /System/Library/Sounds, without the extension.",
+      "default": "Glass"
+    },
+    "sound_error": {
+      "type": "string",
+      "title": "Sound: error",
+      "description": "Played when a turn was stopped by an API error. A name from /System/Library/Sounds, without the extension.",
+      "default": "Basso"
+    },
+    "speak": {
+      "type": "boolean",
+      "title": "Say the project name",
+      "description": "After the sound, a voice says which project is calling, so you can tell windows apart without looking.",
+      "default": false
+    },
+    "voice": {
+      "type": "string",
+      "title": "Voice",
+      "description": "A voice from `say -v '?'`. Empty uses the system voice (Zuzana when the language is cs).",
+      "default": ""
+    },
+    "mute": {
+      "type": "boolean",
+      "title": "Mute",
+      "description": "No sound and no banner. Events are still written to the log.",
+      "default": false
+    }
+  }
+}
