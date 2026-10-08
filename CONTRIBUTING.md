@@ -5,9 +5,10 @@ Bug reports, fixes and translations are welcome.
 ## Scope
 
 Doorbell does one thing: it tells you, on a Mac, that a Claude Code session in VS Code
-needs you or has finished. Changes that make this more reliable are in scope. Support for
-other systems or editors is out of scope for now. If you need it, open an issue to discuss
-it before writing code.
+needs you or has finished. Changes that make this more reliable are in scope. Linux and
+Windows are not yet supported (WIP): open an issue before you start on either, so that the
+work is not done twice. Support for other editors is out of scope for now. If you need it,
+open an issue to discuss it before writing code.
 
 ## Report a bug
 
