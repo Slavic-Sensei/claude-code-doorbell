@@ -151,7 +151,7 @@ brings VS Code forward. The [guide](docs/GUIDE.md#how-a-click-works) has the det
 
 ## Limitations
 
-- **macOS only.** Linux and Windows are not supported.
+- **macOS only.** Linux and Windows are not yet supported (WIP).
 - **Clicking a banner works only with Visual Studio Code itself,** with the project open
   in one of its windows. Cursor, VS Code Insiders and other forks are untested, as is
   Claude Code in a plain terminal. Expect the sound and a plain banner there.
