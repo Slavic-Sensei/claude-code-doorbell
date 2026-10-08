@@ -1,7 +1,7 @@
 {
   "name": "doorbell",
   "displayName": "Doorbell",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Sound and a clickable macOS banner when a Claude Code session in VS Code needs you or has finished. The click lands in the right window and the right chat.",
   "author": {
     "name": "Slavic-Sensei",

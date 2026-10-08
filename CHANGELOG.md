@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 — 2026-10-08
+
+### Changed
+
+- The options form says what the time limit measures and what an empty field means.
+- The log gives the length of a finished turn and the limit in use.
+
 ## 0.1.0 — 2026-10-08
 
 First release.

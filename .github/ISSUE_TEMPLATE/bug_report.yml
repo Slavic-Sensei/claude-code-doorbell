@@ -32,6 +32,6 @@ body:
     attributes:
       label: Versions
       description: macOS and chip (Apple Silicon or Intel), VS Code, the Claude Code extension, terminal-notifier, Doorbell
-      placeholder: macOS 27.0 on Apple Silicon, VS Code 1.140, Claude Code 2.1.292, terminal-notifier 3.1.0, Doorbell 0.1.0
+      placeholder: macOS 27.0 on Apple Silicon, VS Code 1.140, Claude Code 2.1.292, terminal-notifier 3.1.0, Doorbell 0.1.1
     validations:
       required: true
