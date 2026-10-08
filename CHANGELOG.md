@@ -13,5 +13,5 @@ First release.
 - One ring per prompt, a silent banner for a turn that ends with background work still
   running, and silence for turns shorter than 10 seconds and for headless runs.
 - Options for the banner language (`en`, `cs`), the three sounds, a spoken project name,
-  the shortest turn worth announcing, and mute.
+  the time limit for short turns, and mute.
 - A setup check, `/doorbell:doctor`, that sends a test alert.

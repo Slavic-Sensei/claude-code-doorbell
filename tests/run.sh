@@ -117,6 +117,8 @@ doctor()  {
 }
 
 last_log() { tail -n 1 "$DATA/doorbell.log" 2>/dev/null; }
+# The last log line with the measured length of the turn replaced by N: it varies with the clock.
+last_turn() { last_log | sed -E 's/turn took [0-9]+s/turn took Ns/'; }
 dry()      { sed -n "s/^$1=//p" "$DATA/dry-run.txt" 2>/dev/null; }
 age()      { touch -t "$(date -v-"$2"S '+%Y%m%d%H%M.%S')" "$1"; }   # make a file N seconds old
 calls()    { grep -c "^$1	" "$DATA/calls.tsv" 2>/dev/null; }
@@ -163,8 +165,10 @@ echo "Finished turns"
 new_case
 fire "$(prompt)"; fire "$(stop)"
 expect_log "a turn that ends within seconds stays silent" "skipped: turn took"
+expect_has "  and the log names its length and the limit" "$(last_turn)" "skipped: turn took Ns (limit 10s)"
 age "$DATA/state/$SESSION.start" 60; fire "$(stop)"
 expect_log "a turn of a minute is announced" "dry run: done"
+expect_has "  with its length and the limit in the log" "$(last_turn)" "dry run: done, turn took Ns (limit 10s)"
 expect_eq  "  title names the project" "$(dry title)" "Claude · alpha"
 expect_eq  "  subtitle" "$(dry subtitle)" "Finished — waiting for you"
 expect_eq  "  sound" "$(dry sound)" "Glass"
@@ -192,6 +196,15 @@ new_case
 fire "$(prompt)"; age "$DATA/state/$SESSION.start" 4
 fire "$(stop)" CLAUDE_PLUGIN_OPTION_MIN_DONE_SECONDS=2.5
 expect_log "  2.5 counts as 2" "dry run: done"
+expect_has "  and the log shows the limit as it was counted" "$(last_turn)" "turn took Ns (limit 2s)"
+new_case
+fire "$(prompt)"; age "$DATA/state/$SESSION.start" 4
+fire "$(stop)" CLAUDE_PLUGIN_OPTION_MIN_DONE_SECONDS=30
+expect_has "min_done_seconds=30 silences a turn of 4 s, and the log shows that limit" "$(last_turn)" "skipped: turn took Ns (limit 30s)"
+new_case
+fire "$(prompt)"; age "$DATA/state/$SESSION.start" 4
+fire "$(stop)" CLAUDE_PLUGIN_OPTION_MIN_DONE_SECONDS=
+expect_has "an empty min_done_seconds means 10" "$(last_turn)" "skipped: turn took Ns (limit 10s)"
 for bad in soon 0.x . 1.5abc 1.2.3; do
   new_case
   fire "$(prompt)"; age "$DATA/state/$SESSION.start" 4
@@ -202,10 +215,12 @@ done
 new_case
 fire "$(stop)"
 expect_log "a session with no recorded prompt is announced" "dry run: done"
+expect_not "  and no length is claimed for its turn" "$(last_log)" "turn took"
 new_case
 fire "$(prompt)"; touch -t 203001010000 "$DATA/state/$SESSION.start"
 fire "$(stop)"
 expect_log "a turn start from the future (a clock set back) does not silence the turn" "dry run: done"
+expect_not "  nor is a length made up for it" "$(last_log)" "turn took"
 new_case
 fire "$(notice agent_completed)"
 expect_log "a finished background session is announced" "dry run: done"
@@ -356,6 +371,11 @@ fire "$(stop)" CLAUDE_PLUGIN_OPTION_LANGUAGE=xx CLAUDE_PLUGIN_OPTION_SOUND_DONE=
 expect_eq  "an unknown language falls back to English" "$(dry subtitle)" "Finished — waiting for you"
 expect_eq  "a sound that does not exist falls back to the default" "$(dry sound)" "Glass"
 expect_log "  and the log says so" "no sound named 'tmpGlas', played Glass"
+new_case
+fire "$(stop)" CLAUDE_PLUGIN_OPTION_SOUND_DONE= CLAUDE_PLUGIN_OPTION_LANGUAGE=
+expect_eq  "an empty option means the default: the sound" "$(dry sound)" "Glass"
+expect_eq  "  and the language" "$(dry subtitle)" "Finished — waiting for you"
+expect_not "  and the log reports no mistake" "$(last_log)" "no sound named"
 
 new_case
 # shellcheck disable=SC2016  # the backticks are part of the test message, not a command
@@ -490,6 +510,12 @@ expect_eq  "  and the click command" "$(target_of "$(arg_after terminal-notifier
 new_case
 deliver "$(prompt)"
 expect_eq "a new prompt clears the session's old banner" "$(arg_after terminal-notifier -remove)" "doorbell-$SESSION"
+age "$DATA/state/$SESSION.start" 60; deliver "$(stop)"
+expect_has "the alert for a timed turn names its length and the limit" "$(last_turn)" "alerted: done, turn took Ns (limit 10s), banner via terminal-notifier, click: chat"
+new_case
+deliver "$(prompt)"; age "$DATA/state/$SESSION.start" 60
+deliver "$(stop_with '[{"type":"subagent","status":"running"}]')"
+expect_has "  and so does the banner for a paused one" "$(last_turn)" "alerted: paused (no sound), turn took Ns (limit 10s), banner via terminal-notifier, click: chat"
 
 new_case
 deliver "$(stop_with '[{"type":"subagent","status":"running"}]')"

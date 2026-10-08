@@ -195,17 +195,18 @@ Doorbell stays quiet on purpose in these cases. The log names most of them.
 
 | Case | Why | In the log |
 | --- | --- | --- |
-| A finished turn takes less than 10 seconds | You are still looking at it | `skipped: turn took 4s` |
+| A finished turn takes less than 10 seconds | You have most likely not looked away yet | `skipped: turn took 4s (limit 10s)` |
 | A second or third event arrives for one prompt | You have already been told | `skipped: duplicate` |
 | Claude runs without a chat window (`claude -p`, SDK scripts, cron jobs) | Nobody is waiting at a window | `skipped: headless` |
 | The `mute` option is on | You asked for silence | `muted: done` |
 | You interrupt Claude yourself | Claude Code reports no finished turn | nothing |
 | A subagent finishes inside a turn | Only the main session's turn counts | nothing |
 
-A prompt that needs you always rings, even in the window you are looking at. And when in
-doubt, Doorbell rings. After you interrupt Claude, or when background work never reports
-back, it cannot tell when the next turn began, so that turn is announced even if it was
-short.
+Doorbell goes by the clock alone. It cannot tell which chat you are looking at, so a turn
+of 10 seconds or longer rings even when its chat is in front of you. A prompt that needs
+you always rings, wherever you are looking. And when in doubt, Doorbell rings. After you
+interrupt Claude, or when background work never reports back, it cannot tell when the next
+turn began, so that turn is announced even if it was short.
 
 ## Options
 
@@ -218,16 +219,26 @@ claude plugin install doorbell@slavic-sensei --config min_done_seconds=30
 
 If a change does not seem to apply in an open chat, type `/reload-plugins` there.
 
+The form shows a text field empty until you set it. An empty field means the default from
+this table.
+
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `language` | `en` | Language of the banner text: `en` or `cs`. |
-| `min_done_seconds` | `10` | Finished turns shorter than this stay silent. `0` announces every turn. |
+| `min_done_seconds` | `10` | Turns shorter than this many seconds are not announced. Counted from your prompt until Claude stops. `0` announces every turn. |
 | `sound_attention` | `Funk` | Sound when a session needs you. A name from `/System/Library/Sounds`. |
 | `sound_done` | `Glass` | Sound when a session has finished. |
 | `sound_error` | `Basso` | Sound when a turn was stopped by an error. |
 | `speak` | `false` | After the sound, a voice says which project is calling. |
 | `voice` | system voice | A voice from `say -v '?'`. |
 | `mute` | `false` | No sound and no banner. Events are still logged. |
+
+**The time limit.** `min_done_seconds` decides which finished turns are announced. The
+clock starts when you send a prompt and stops when Claude does; time spent waiting for
+your approval counts. A turn shorter than the limit ends without a sound or a banner, so a
+higher number means fewer rings and `0` announces every turn. Prompts that need you and
+errors always ring, whatever the limit. For a turn it could time, the log names both
+numbers: `turn took 4s (limit 10s)`.
 
 **Sounds.** Any sound in `/System/Library/Sounds` works. Give its name without the
 extension. To list them and listen to one:
@@ -237,8 +248,9 @@ ls /System/Library/Sounds
 afplay /System/Library/Sounds/Hero.aiff
 ```
 
-A misspelled name does not silence the bell. Doorbell plays the default sound and logs the
-mistake.
+An empty field plays the default sound from the table. So does a misspelled name, and
+Doorbell logs the mistake: a typing error must not silence the bell. No value turns a
+single sound off. For silence there is only `mute`, which hides the banner as well.
 
 **Speaking the project name.** With several windows open, `speak` tells you which one is
 calling without looking at the screen: after the sound, a voice says, for example,
@@ -296,7 +308,7 @@ Each alert, and each decision not to alert, is one line in this file:
 2026-10-08 12:06:31  e4f288e1 PreToolUse        AskUserQuestion      web                      claude-vscode alerted: attention, banner via terminal-notifier, click: chat
 2026-10-08 12:06:31  e4f288e1 PermissionRequest AskUserQuestion      web                      claude-vscode ignored: covered by PreToolUse
 2026-10-08 12:06:37  e4f288e1 Notification      permission_prompt    web                      claude-vscode skipped: duplicate
-2026-10-08 12:07:04  e4f288e1 Stop              -                    web                      claude-vscode alerted: done, banner via terminal-notifier, click: chat
+2026-10-08 12:07:04  e4f288e1 Stop              -                    web                      claude-vscode alerted: done, turn took 41s (limit 10s), banner via terminal-notifier, click: chat
 ```
 
 From left to right: the time, the first characters of the session id, the event, the tool
@@ -306,9 +318,9 @@ line. Once the log grows past 2,000 lines it trims itself to the last 1,000.
 
 | Outcome | Meaning |
 | --- | --- |
-| `alerted: …` | A sound was played and a banner was sent. `banner via` says how: `terminal-notifier`, `osascript`, or `none` when no banner could be shown. |
+| `alerted: …` | A sound was played and a banner was sent. `banner via` says how: `terminal-notifier`, `osascript`, or `none` when no banner could be shown. For a finished turn that Doorbell could time, `turn took Ns (limit Ms)` gives the turn's length and the `min_done_seconds` this chat uses. |
 | `alerted: paused (no sound)` | The turn ended with background work still running: a banner, no ring. |
-| `skipped: turn took Ns` | The turn was shorter than `min_done_seconds`. |
+| `skipped: turn took Ns (limit Ms)` | The turn took N seconds, less than the `min_done_seconds` of M that this chat uses. |
 | `skipped: duplicate` | Another event of the same prompt had already rung. |
 | `skipped: headless` | A run without a chat window. |
 | `muted: …` | The `mute` option is on. |
@@ -330,6 +342,7 @@ Doorbell heard about the event at all, and what it decided.
 | A click brings VS Code forward, but not the right window (`click: app`) | The project is not open as a folder, or as the first folder of a workspace, in any VS Code window. |
 | A click opens the window, but shows a blank chat | The window switch took longer than the one-second pause. [Open an issue](https://github.com/Slavic-Sensei/claude-code-doorbell/issues) and attach the log lines from that time. |
 | No ring after a short answer | That is `min_done_seconds`. Set it to `0` to hear every turn. |
+| A ring after a quick answer, or in spite of the limit you set | Read the turn's line in the log. `turn took Ns (limit Ms)` gives its length and the limit this chat uses, and a turn rings when N is M or more. If M is not the number you set, type `/reload-plugins` in that chat. A line without `turn took` means Doorbell did not see the turn begin, and then it rings. Approvals, questions and errors always ring. |
 | Two rings for one prompt | It should not happen. Open an issue and attach the log lines from that time. |
 
 ## How it works
@@ -424,7 +437,8 @@ chat has its own banner, and a new prompt in a chat removes that chat's old bann
 
 **Why 10 seconds?**
 
-A turn that short ends while you are still reading the chat. Change it with
+After an answer that quick you have most likely not looked away yet. That is a guess from
+the clock: Doorbell cannot see where you are looking. Change the limit with
 `min_done_seconds`.
 
 **Does it ring on every `/loop` iteration?**

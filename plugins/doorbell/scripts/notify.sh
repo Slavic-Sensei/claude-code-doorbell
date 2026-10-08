@@ -47,7 +47,7 @@ VOICE=$(option VOICE "")
 SOUND_ATTENTION=$(option SOUND_ATTENTION Funk)   # names from /System/Library/Sounds
 SOUND_DONE=$(option SOUND_DONE Glass)
 SOUND_ERROR=$(option SOUND_ERROR Basso)
-MIN_DONE_SECONDS=$(option MIN_DONE_SECONDS 10)   # a shorter turn ends while the user watches it
+MIN_DONE_SECONDS=$(option MIN_DONE_SECONDS 10)   # after a shorter turn the user has most likely not looked away yet
 case "$MIN_DONE_SECONDS" in
   ''|*[!0-9.]*|*.*.*|.) MIN_DONE_SECONDS=10 ;;   # not a number
   *.*) MIN_DONE_SECONDS=${MIN_DONE_SECONDS%%.*}; MIN_DONE_SECONDS=${MIN_DONE_SECONDS:-0} ;;   # 2.5 -> 2, .5 -> 0
@@ -192,11 +192,18 @@ case "$event" in
   *) exit 0 ;;
 esac
 
+turn_note=""
 if { [ "$kind" = "done" ] || [ "$kind" = "paused" ]; } && [ -f "$STATE_DIR/$session.start" ]; then
   elapsed=$(age_of "$STATE_DIR/$session.start")
   # A negative time means the clock was set back; then nothing is known about the turn.
-  if [ "$elapsed" -ge 0 ] && [ "$elapsed" -lt "$MIN_DONE_SECONDS" ]; then
-    log "skipped: turn took ${elapsed}s"; exit 0
+  if [ "$elapsed" -ge 0 ]; then
+    # Both numbers go to the log, whatever the decision: the limit is an option, and only
+    # the log can show which value a session is really using.
+    turn_note="turn took ${elapsed}s (limit ${MIN_DONE_SECONDS}s)"
+    if [ "$elapsed" -lt "$MIN_DONE_SECONDS" ]; then
+      log "skipped: $turn_note"; exit 0
+    fi
+    turn_note=", $turn_note"
   fi
 fi
 
@@ -333,7 +340,7 @@ fi
 if [ -n "${DOORBELL_DRY_RUN:-}" ]; then
   printf '%s\n' "title=$title" "subtitle=$subtitle" "body=$body" "sound=$sound" \
     "click_kind=$click_kind" "click=$click" >"$DATA_DIR/dry-run.txt"
-  log "dry run: $kind$sound_note"; exit 0
+  log "dry run: $kind$turn_note$sound_note"; exit 0
 fi
 
 # afplay bypasses Focus modes, which would silence a sound attached to the banner itself.
@@ -361,7 +368,7 @@ if [ "$via" = "none" ]; then
 fi
 
 quiet=""; [ -n "$sound" ] || quiet=" (no sound)"
-log "alerted: $kind$quiet, banner via $via$notifier_note, click: $click_kind$sound_note"
+log "alerted: $kind$quiet$turn_note, banner via $via$notifier_note, click: $click_kind$sound_note"
 
 if is_on "$SPEAK" && [ -n "$spoken" ]; then
   wait   # let the sound finish before speaking over it

@@ -15,32 +15,32 @@
     "language": {
       "type": "string",
       "title": "Language",
-      "description": "Language of the banner text: en or cs.",
+      "description": "Language of the banner text: en or cs. Empty means en.",
       "default": "en"
     },
     "min_done_seconds": {
       "type": "number",
-      "title": "Shortest turn worth announcing (seconds)",
-      "description": "A turn that finishes faster than this ends while you are still watching it, so it stays silent. 0 announces every turn.",
+      "title": "Do not announce turns shorter than (seconds)",
+      "description": "A turn runs from your prompt until Claude stops. A shorter one ends quietly: no sound, no banner. Approvals, questions and errors are always announced. Empty means 10. 0 announces every turn.",
       "default": 10,
       "min": 0
     },
     "sound_attention": {
       "type": "string",
       "title": "Sound: needs you",
-      "description": "Played when a session waits for your approval or answer. A name from /System/Library/Sounds, without the extension.",
+      "description": "Played when a session waits for your approval or answer. A name from /System/Library/Sounds, without the extension. Empty plays the default sound (Funk on macOS).",
       "default": "Funk"
     },
     "sound_done": {
       "type": "string",
       "title": "Sound: finished",
-      "description": "Played when a session has finished its turn. A name from /System/Library/Sounds, without the extension.",
+      "description": "Played when a session has finished its turn. A name from /System/Library/Sounds, without the extension. Empty plays the default sound (Glass on macOS).",
       "default": "Glass"
     },
     "sound_error": {
       "type": "string",
       "title": "Sound: error",
-      "description": "Played when a turn was stopped by an API error. A name from /System/Library/Sounds, without the extension.",
+      "description": "Played when a turn was stopped by an API error. A name from /System/Library/Sounds, without the extension. Empty plays the default sound (Basso on macOS).",
       "default": "Basso"
     },
     "speak": {

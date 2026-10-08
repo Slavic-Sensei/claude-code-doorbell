@@ -51,8 +51,9 @@ window is calling without opening it.
 - **A pause is not the end.** When a turn ends while agents or workflows it started are
   still running, you get a banner without a sound. The bell rings when the work is really
   done.
-- **Quiet while you watch.** A finished turn shorter than 10 seconds stays silent, because
-  you are still looking at it. A prompt that needs you always rings.
+- **Quiet after a quick answer.** A turn shorter than 10 seconds ends without a sound or a
+  banner. Doorbell goes by the clock alone: it cannot see whether you are looking at the
+  chat. A prompt that needs you always rings.
 - **Quiet for scripts.** Doorbell stays silent for `claude -p`, SDK scripts and cron jobs,
   because nobody is waiting at a window.
 - **Heard in Focus.** A Focus mode hides the banner, but not the sound. For silence, turn
@@ -110,13 +111,16 @@ what you should see.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `language` | `en` | Language of the banner text: `en` or `cs`. |
-| `min_done_seconds` | `10` | Finished turns shorter than this stay silent. `0` announces every turn. |
+| `min_done_seconds` | `10` | Turns shorter than this many seconds are not announced. Counted from your prompt until Claude stops. `0` announces every turn. |
 | `sound_attention` | `Funk` | Sound when Claude needs you. A name from `/System/Library/Sounds`. |
 | `sound_done` | `Glass` | Sound when Claude has finished. |
 | `sound_error` | `Basso` | Sound when a turn was stopped by an error. |
 | `speak` | `false` | After the sound, a voice says which project is calling. |
 | `voice` | system voice | A voice from `say -v '?'`. |
 | `mute` | `false` | No sound and no banner. Events are still logged. |
+
+The form shows a text field empty until you set it. An empty field means the default from
+this table.
 
 To change them, type `/plugins` and click the gear icon on Doorbell's row. With the
 `claude` command-line tool, repeat the install command with the option:
@@ -159,6 +163,8 @@ brings VS Code forward. The [guide](docs/GUIDE.md#how-a-click-works) has the det
   the workspace's first folder, which is where the extension starts it.
 - **Remote sessions do not ring.** With SSH, WSL or a Dev Container the hooks run on the
   remote machine, not on your Mac.
+- **Doorbell does not know what you are looking at.** It rings even when the chat that
+  calls is in front of you. Only turns shorter than `min_done_seconds` end quietly.
 - **Without terminal-notifier** the banner is sent through AppleScript. A click on it does
   not take you to the chat, and macOS shows it only if Script Editor is allowed to send
   notifications.
@@ -197,6 +203,7 @@ Start with `/doorbell:doctor`. It names what is wrong and how to fix it.
 | The banner disappears too fast | Its alert style is Temporary. Set it to Persistent in System Settings → Notifications → terminal-notifier. |
 | A click does nothing or only shows VS Code | terminal-notifier is missing, or Doorbell could not tell which window holds the project. Run `/doorbell:doctor`. |
 | No ring after a short answer | Turns shorter than `min_done_seconds` stay silent on purpose. Lower it, or set it to `0` to hear every turn. |
+| It rings while you are looking at the chat | Doorbell cannot tell where you are looking. It skips only turns shorter than `min_done_seconds`, so raise that number for fewer rings. Approvals, questions and errors always ring. |
 
 Every alert, and every decision not to alert, is written to
 `~/.claude/plugins/data/doorbell-slavic-sensei/doorbell.log` with the reason. The
