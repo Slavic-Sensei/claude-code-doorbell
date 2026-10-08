@@ -399,7 +399,9 @@ claude plugin marketplace update slavic-sensei
 claude plugin update doorbell@slavic-sensei
 ```
 
-Then type `/reload-plugins` in open chats, or start new ones.
+Then type `/reload-plugins` in open chats, or start new ones. An update brings something
+new only when Doorbell's version number has changed. The [changelog](../CHANGELOG.md) says
+what each version changed.
 
 To uninstall:
 

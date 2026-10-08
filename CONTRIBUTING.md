@@ -28,7 +28,8 @@ git clone https://github.com/Slavic-Sensei/claude-code-doorbell
 cd claude-code-doorbell
 bash tests/run.sh                                        # no sound, no banner
 brew install shellcheck                                  # once
-shellcheck plugins/doorbell/scripts/*.sh tests/run.sh
+shellcheck plugins/doorbell/scripts/*.sh tests/run.sh .github/scripts/*.sh
+bash .github/scripts/release.sh check                    # version, changelog and tags agree
 claude plugin validate --strict .                        # not part of CI
 ```
 
@@ -57,6 +58,8 @@ The plugin is then loaded in place. After an edit, type `/reload-plugins` in the
 - **When in doubt, ring.** A second ring is better than a missed one.
 - **A test for every change in behavior.** `tests/run.sh` has a case for each of the
   behavior rules above.
+- **A change in the plugin is a release.** It gets a new version number in the same
+  commit. See [Versions and releases](#versions-and-releases).
 - **Comments explain why**, not what.
 
 ## Add a language
@@ -68,8 +71,38 @@ The plugin is then loaded in place. After an edit, type `/reload-plugins` in the
    the README and the guide.
 3. Add a check to `tests/run.sh`, next to the one for `cs`.
 
-## Release
+## Versions and releases
 
-Bump `version` in `plugin.json`, describe the change in `CHANGELOG.md`, and tag the
-commit. People who have the plugin installed stay on their version until the number
+Claude Code goes by the version number alone: people who have Doorbell installed get
+nothing new until the number in `plugin.json` changes. So one number stands for one
+content of the plugin.
+
+- **Every change inside `plugins/doorbell/` gets a new number,** in the same commit, and a
+  section in `CHANGELOG.md` written for the people who use Doorbell. A number is never
+  used twice.
+- **A change outside the plugin keeps the number:** the README, the guide, the tests, CI.
+- **A release that went wrong is not repaired.** The next number fixes it.
+
+Which number to raise:
+
+| The change | Number | Example |
+| --- | --- | --- |
+| A fix or a change of wording. The bell rings when it rang before. | The last: 0.1.0 → 0.1.1 | A clearer description of an option |
+| A new option or feature, a different default, a higher requirement | The middle: 0.1.1 → 0.2.0 | Support for another system |
+| An option removed or renamed, so that saved settings stop working | The middle until 1.0.0, with a warning in the changelog. The first after that. | Another name for `min_done_seconds` |
+
+Version 1.0.0 will be the promise that saved settings keep working until the first number
 changes.
+
+To release, change `version` in
+[plugin.json](plugins/doorbell/.claude-plugin/plugin.json), add a section for it at the top
+of `CHANGELOG.md`, and push both with the change itself. CI does the rest:
+
+- **It checks.** A run fails when the plugin differs from what was released under its
+  number, when the newest section of the changelog is not for the number in `plugin.json`,
+  or when that section is empty. `bash .github/scripts/release.sh check` runs the same
+  check on your machine.
+- **It publishes.** When a number without a tag reaches `main` and the other jobs pass, CI
+  tags the commit `vX.Y.Z` and creates the GitHub release with that section as its text.
+
+There are no release branches, no pre-release versions and no fixes for older versions.

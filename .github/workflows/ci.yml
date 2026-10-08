@@ -22,7 +22,7 @@ jobs:
       - name: Lint shell scripts
         run: |
           brew install shellcheck
-          shellcheck plugins/doorbell/scripts/*.sh tests/run.sh
+          shellcheck plugins/doorbell/scripts/*.sh tests/run.sh .github/scripts/*.sh
 
       - name: Check that manifests are valid JSON
         run: |
@@ -40,3 +40,38 @@ jobs:
 
       - name: Lint Markdown
         run: npx --yes markdownlint-cli2@0.23.3 "**/*.md"
+
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # the check compares the plugin with the tag of its version
+
+      - name: Check that the version, the changelog and the released tags agree
+        run: bash .github/scripts/release.sh check
+
+  release:
+    # A version that reaches main without a tag is a new release.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, docs, version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # to create the tag and the release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Tag and publish the version if it has no tag yet
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(bash .github/scripts/release.sh version)
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "v$version is already released."
+            exit 0
+          fi
+          bash .github/scripts/release.sh notes >"$RUNNER_TEMP/notes.md"
+          gh release create "v$version" --target "$GITHUB_SHA" --title "v$version" \
+            --notes-file "$RUNNER_TEMP/notes.md"
